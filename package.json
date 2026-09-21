@@ -1,0 +1,14 @@
+{
+  "name": "gugatan-pa-sekayu",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Formulir offline canggih untuk arsip cerai gugat dan cerai talak PA Sekayu",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.1.0"
+  }
+}

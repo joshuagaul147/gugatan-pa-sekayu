@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Gugatan PA Sekayu — Formulir Perkara</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-mark">PA</div>
+      <div><p class="eyebrow">APLIKASI OFFLINE</p><h1>Gugatan PA Sekayu</h1></div>
+      <div class="topbar-status"><span class="status-dot"></span> Tersimpan di perangkat</div>
+    </header>
+    <main class="shell">
+      <section class="hero">
+        <div><p class="eyebrow">FORMULIR PERKARA BARU</p><h2>Data perkara perceraian</h2><p class="muted">Isi data secara bertahap. Beberapa kolom akan terisi otomatis untuk mengurangi kesalahan pengetikan.</p></div>
+        <div class="autosave"><span>●</span> Konsep tersimpan otomatis</div>
+      </section>
+      <div id="alert" class="alert hidden" role="alert"></div>
+      <form id="case-form" novalidate>
+        <section class="card progress-card"><div class="step active"><b>01</b><span>Jenis perkara</span></div><div class="line"></div><div class="step"><b>02</b><span>Para pihak</span></div><div class="line"></div><div class="step"><b>03</b><span>Perkawinan & anak</span></div><div class="line"></div><div class="step"><b>04</b><span>Uraian perkara</span></div></section>
+        <section class="card"><div class="section-heading"><div class="number">01</div><div><h3>Jenis perkara</h3><p>Pilih jenis perkara untuk menyesuaikan istilah para pihak.</p></div></div><div class="case-type"><label class="choice selected"><input type="radio" name="caseType" value="cerai-gugat" checked /><strong>Cerai gugat</strong><span>Penggugat melawan Tergugat</span></label><label class="choice"><input type="radio" name="caseType" value="cerai-talak" /><strong>Cerai talak</strong><span>Pemohon melawan Termohon</span></label></div><div class="grid two"><label>Nomor perkara (opsional)<input name="caseNumber" placeholder="Contoh: 123/Pdt.G/2026/PA.Sky" /></label><label>Tanggal pengisian<input name="entryDate" type="date" /></label></div></section>
+        <section class="card"><div class="section-heading"><div class="number">02</div><div><h3 id="party-title">Penggugat</h3><p>Masukkan NIK untuk mengisi tanggal lahir dan jenis kelamin secara otomatis.</p></div></div><div class="party-block"><h4 id="party-a-label">Data Penggugat</h4><div class="grid three"><label>NIK <span class="required">*</span><input name="aNik" inputmode="numeric" maxlength="16" placeholder="16 digit NIK" required /><small id="aNikHint" class="hint">Tanggal lahir pada NIK akan dibaca otomatis.</small></label><label>Nama lengkap <span class="required">*</span><input name="aName" placeholder="Nama sesuai identitas" required /></label><label>Jenis kelamin<input name="aGender" readonly placeholder="Terisi dari NIK" /></label></div><div class="grid three"><label>Tempat lahir<input name="aBirthPlace" placeholder="Kabupaten/kota" /></label><label>Tanggal lahir <span class="required">*</span><input name="aBirthDate" type="date" required /></label><label>Umur<input name="aAge" readonly placeholder="Otomatis" /></label></div><div class="grid three"><label>Agama<input name="aReligion" value="Islam" /></label><label>Pekerjaan<input name="aJob" placeholder="Pekerjaan" /></label><label>Pendidikan<input name="aEducation" placeholder="Pendidikan terakhir" /></label><label class="full">Alamat lengkap <span class="required">*</span><textarea name="aAddress" rows="2" placeholder="Jalan, desa/kelurahan, kecamatan, kabupaten" required></textarea></label></div></div><div class="party-block second"><h4 id="party-b-label">Data Tergugat</h4><div class="grid three"><label>NIK<input name="bNik" inputmode="numeric" maxlength="16" placeholder="16 digit NIK (jika tersedia)" /><small id="bNikHint" class="hint">Opsional jika NIK tidak tersedia.</small></label><label>Nama lengkap <span class="required">*</span><input name="bName" placeholder="Nama sesuai identitas" required /></label><label>Jenis kelamin<input name="bGender" readonly placeholder="Terisi dari NIK" /></label></div><div class="grid three"><label>Tempat lahir<input name="bBirthPlace" /></label><label>Tanggal lahir<input name="bBirthDate" type="date" /></label><label>Umur<input name="bAge" readonly placeholder="Otomatis" /></label></div><div class="grid three"><label>Agama<input name="bReligion" value="Islam" /></label><label>Pekerjaan<input name="bJob" /></label><label>Pendidikan<input name="bEducation" /></label><label class="full">Alamat lengkap <span class="required">*</span><textarea name="bAddress" rows="2" required></textarea></label></div></div></section>
+        <section class="card"><div class="section-heading"><div class="number">03</div><div><h3>Data perkawinan</h3><p>Informasi ini membantu membentuk bagian identitas dan riwayat perkawinan.</p></div></div><div class="grid three"><label>Nomor buku nikah/akta<input name="marriageNumber" placeholder="Nomor dokumen" /></label><label>Tanggal perkawinan<input name="marriageDate" type="date" /></label><label>Lama perkawinan<input name="marriageDuration" readonly placeholder="Otomatis" /></label><label>Tempat perkawinan<input name="marriagePlace" placeholder="Tempat akad" /></label><label>KUA penerbit<input name="kua" placeholder="Nama KUA" /></label></div><div class="subheading"><h4>Anak</h4><button type="button" id="add-child" class="button secondary">＋ Tambah anak</button></div><div id="children-list" class="children-list"><div class="empty-state">Belum ada data anak. Klik “Tambah anak” bila diperlukan.</div></div></section>
+        <section class="card"><div class="section-heading"><div class="number">04</div><div><h3>Uraian perkara</h3><p>Isi fakta perkara dan tuntutan. Uraian dapat disunting kembali sebelum dibuat menjadi dokumen.</p></div></div><label>Uraian alasan perceraian <span class="required">*</span><textarea name="facts" rows="7" placeholder="Tuliskan uraian fakta secara kronologis..." required></textarea><small class="counter" data-for="facts">0 karakter</small></label><label>Petitum/tuntutan <span class="required">*</span><textarea name="claims" rows="5" placeholder="Tuliskan petitum atau pilih dari template pada tahap berikutnya..." required></textarea><small class="counter" data-for="claims">0 karakter</small></label></section>
+        <section class="action-bar"><button type="button" id="reset-form" class="button ghost">Bersihkan formulir</button><div><button type="button" id="save-draft" class="button secondary">Simpan konsep</button><button type="submit" class="button primary">Validasi & lanjutkan <span>→</span></button></div></section>
+      </form>
+    </main>
+    <footer>Pengadilan Agama Sekayu · Data disimpan lokal pada perangkat ini · Tidak ada data yang dikirim ke internet</footer>
+    <script src="app.js"></script>
+  </body>
+</html>
