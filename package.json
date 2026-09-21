@@ -8,6 +8,10 @@
     "build": "vite build",
     "preview": "vite preview"
   },
+  "dependencies": {
+    "docx": "^9.1.1",
+    "jspdf": "^2.5.2"
+  },
   "devDependencies": {
     "vite": "^6.1.0"
   }

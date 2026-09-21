@@ -1,3 +1,6 @@
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType } from 'docx';
+import { jsPDF } from 'jspdf';
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -464,10 +467,176 @@ function importData(event) {
   event.target.value = '';
 }
 
+function buildLegalDocumentData() {
+  const data = collectFormData();
+  const partyA = data.caseType === 'cerai-talak' ? 'Pemohon' : 'Penggugat';
+  const partyB = data.caseType === 'cerai-talak' ? 'Termohon' : 'Tergugat';
+
+  return {
+    caseTypeLabel: getCaseTypeLabel(),
+    partyA,
+    partyB,
+    aName: data.aName || '-',
+    aAge: data.aAge || '-',
+    aNik: data.aNik || '-',
+    aBirthDate: data.aBirthDate ? formatDate(data.aBirthDate) : '-',
+    aAddress: data.aAddress || '-',
+    bName: data.bName || '-',
+    bAge: data.bAge || '-',
+    bNik: data.bNik || '-',
+    bBirthDate: data.bBirthDate ? formatDate(data.bBirthDate) : '-',
+    bAddress: data.bAddress || '-',
+    marriageNumber: data.marriageNumber || '-',
+    marriageDate: data.marriageDate ? formatDate(data.marriageDate) : '-',
+    marriageDuration: data.marriageDuration || '-',
+    marriagePlace: data.marriagePlace || '-',
+    kua: data.kua || '-',
+    facts: data.facts || '-',
+    claims: data.claims || '-',
+    caseNumber: data.caseNumber || 'Belum diisi',
+    entryDate: data.entryDate ? formatDate(data.entryDate) : formatDate(today),
+    childRows: Array.isArray(data.children) && data.children.length ? data.children : [{ name: '-', place: '-', birth: '-' }]
+  };
+}
+
+function makeDocxParagraph(text, options = {}) {
+  return new Paragraph({
+    alignment: options.align || AlignmentType.LEFT,
+    spacing: { before: options.before || 120, after: options.after || 120 },
+    children: [new TextRun({
+      text,
+      bold: options.bold || false,
+      size: options.size || '22',
+      italics: options.italic || false
+    })]
+  });
+}
+
+function buildWordDocument() {
+  const doc = buildLegalDocumentData();
+
+  const children = [
+    new Paragraph({ text: '', spacing: { before: 0, after: 0 } }),
+    makeDocxParagraph('GUGATAN CERAI', { bold: true, size: '32', align: AlignmentType.CENTER, before: 0, after: 260 }),
+    makeDocxParagraph(`Nomor Perkara: ${doc.caseNumber}`, { bold: true, size: '22', before: 0, after: 200 }),
+    makeDocxParagraph('Kepada Yth.', { bold: false, size: '22', before: 0, after: 0 }),
+    makeDocxParagraph('Ketua Pengadilan Agama Sekayu', { bold: false, size: '22', before: 0, after: 0 }),
+    makeDocxParagraph('Di Sekayu', { bold: false, size: '22', before: 0, after: 220 }),
+    makeDocxParagraph('Perihal: Gugatan Cerai', { bold: true, size: '22', before: 0, after: 220 }),
+    makeDocxParagraph(`Dengan hormat, ${doc.partyA} yang bertanda tangan di bawah ini:`, { before: 0, after: 120 }),
+    makeDocxParagraph(`1. Nama lengkap: ${doc.aName}`),
+    makeDocxParagraph(`2. Tempat, tanggal lahir: ${doc.aBirthDate}`),
+    makeDocxParagraph(`3. Umur: ${doc.aAge}`),
+    makeDocxParagraph(`4. NIK: ${doc.aNik}`),
+    makeDocxParagraph(`5. Alamat: ${doc.aAddress}`),
+    makeDocxParagraph('Selanjutnya disebut Penggugat.'),
+    makeDocxParagraph(`Terhadap ${doc.partyB} yang berdomisili di: ${doc.bAddress}`),
+    makeDocxParagraph(`Nama: ${doc.bName}`, { before: 0, after: 0 }),
+    makeDocxParagraph(`Umur: ${doc.bAge}`, { before: 0, after: 0 }),
+    makeDocxParagraph(`NIK: ${doc.bNik}`, { before: 0, after: 0 }),
+    makeDocxParagraph('Selanjutnya disebut Tergugat.'),
+    makeDocxParagraph('Berdasarkan hal tersebut, Penggugat mengajukan gugatan dengan alasan sebagai berikut:', { before: 0, after: 100 }),
+    makeDocxParagraph(doc.facts, { before: 0, after: 220 }),
+    makeDocxParagraph('Berdasarkan uraian di atas, Penggugat memohon kepada Majelis Hakim agar berkenan:', { before: 0, after: 120 }),
+    makeDocxParagraph(doc.claims, { before: 0, after: 240 }),
+    makeDocxParagraph('Demikian gugatan ini diajukan untuk dapat dipertimbangkan dan dijatuhkan putusan yang seadil-adilnya.', { before: 0, after: 220 }),
+    makeDocxParagraph(`Sekayu, ${doc.entryDate}`, { align: AlignmentType.RIGHT, before: 0, after: 220 }),
+    makeDocxParagraph('Penggugat', { align: AlignmentType.RIGHT, before: 0, after: 0 }),
+    makeDocxParagraph('', { before: 0, after: 220 }),
+    makeDocxParagraph('', { before: 0, after: 0 }),
+    makeDocxParagraph(doc.aName, { align: AlignmentType.RIGHT, bold: true, before: 0, after: 0 })
+  ];
+
+  return new Document({
+    sections: [{
+      properties: {
+        page: {
+          margin: { top: 720, right: 720, bottom: 720, left: 720 }
+        }
+      },
+      children
+    }]
+  });
+}
+
+async function exportWord() {
+  const invalid = $$('[required]', form).filter((input) => !input.value.trim());
+  if (invalid.length) {
+    invalid[0].focus();
+    showAlert(`Masih ada ${invalid.length} kolom wajib yang belum diisi.`, 'error');
+    return;
+  }
+
+  const doc = buildWordDocument();
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `gugatan-${getCaseTypeLabel().replace(/\s+/g, '-')}-${Date.now()}.docx`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showAlert('Dokumen Word berhasil diunduh.');
+}
+
+function exportPdf() {
+  const data = buildLegalDocumentData();
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 40;
+  let y = 50;
+
+  const addText = (text, options = {}) => {
+    const lines = doc.splitTextToSize(text, options.width || (pageWidth - margin * 2));
+    doc.setFontSize(options.size || 11);
+    doc.setFont(options.bold ? 'helvetica' : 'helvetica', options.bold ? 'bold' : 'normal');
+    lines.forEach((line) => {
+      if (y > doc.internal.pageSize.getHeight() - 60) {
+        doc.addPage();
+        y = 50;
+      }
+      doc.text(line, options.x || margin, y, { align: options.align || 'left' });
+      y += options.leading || 18;
+    });
+  };
+
+  addText('GUGATAN CERAI', { size: 18, bold: true, align: 'center', width: pageWidth - margin * 2, x: margin });
+  y += 10;
+  addText(`Nomor Perkara: ${data.caseNumber}`, { size: 11, bold: true, width: pageWidth - margin * 2 });
+  addText('Kepada Yth.', {});
+  addText('Ketua Pengadilan Agama Sekayu', {});
+  addText('Di Sekayu', {});
+  addText('Perihal: Gugatan Cerai', { bold: true });
+  addText(`Dengan hormat, ${data.partyA} yang bertanda tangan di bawah ini:`, {});
+  addText(`1. Nama lengkap: ${data.aName}`);
+  addText(`2. Tempat, tanggal lahir: ${data.aBirthDate}`);
+  addText(`3. Umur: ${data.aAge}`);
+  addText(`4. NIK: ${data.aNik}`);
+  addText(`5. Alamat: ${data.aAddress}`);
+  addText(`Selanjutnya disebut ${data.partyA === 'Pemohon' ? 'Pemohon' : 'Penggugat'}.`);
+  addText(`Terhadap ${data.partyB} yang berdomisili di: ${data.bAddress}`);
+  addText(`Nama: ${data.bName}`);
+  addText(`Umur: ${data.bAge}`);
+  addText(`NIK: ${data.bNik}`);
+  addText(`Selanjutnya disebut ${data.partyB === 'Termohon' ? 'Termohon' : 'Tergugat'}.`);
+  addText('Berdasarkan hal tersebut, Penggugat mengajukan gugatan dengan alasan sebagai berikut:', {});
+  addText(data.facts, { width: pageWidth - margin * 2 });
+  addText('Berdasarkan uraian di atas, Penggugat memohon kepada Majelis Hakim agar berkenan:', {});
+  addText(data.claims, { width: pageWidth - margin * 2 });
+  addText('Demikian gugatan ini diajukan untuk dapat dipertimbangkan dan dijatuhkan putusan yang seadil-adilnya.', {});
+  addText(`Sekayu, ${data.entryDate}`, { align: 'right', x: margin, width: pageWidth - margin * 2 });
+  addText('Penggugat', { align: 'right', x: margin, width: pageWidth - margin * 2 });
+  addText(data.aName, { align: 'right', x: margin, width: pageWidth - margin * 2, bold: true });
+
+  doc.save(`gugatan-${getCaseTypeLabel().replace(/\s+/g, '-')}-${Date.now()}.pdf`);
+  showAlert('Dokumen PDF berhasil diunduh.');
+}
+
 $('#save-draft').addEventListener('click', () => saveDraft());
 $('#save-archive').addEventListener('click', addToArchive);
 $('#export-data').addEventListener('click', exportData);
 $('#import-data').addEventListener('change', importData);
+$('#export-word').addEventListener('click', exportWord);
+$('#export-pdf').addEventListener('click', exportPdf);
 
 form.addEventListener('input', () => {
   clearTimeout(window.saveTimer);
